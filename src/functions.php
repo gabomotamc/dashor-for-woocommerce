@@ -2,9 +2,26 @@
 # TOTAL VALUES (NO CHARTS)
 
 # 1. Total Customers
-function get_total_customers() {
-    $customers = get_users(['role' => 'customer']);
-    return count($customers);
+function get_total_customers( $replace = false ) {
+
+    $cacheKey = 'total-customers';
+    $cacheGroup = 'dwv_queries';
+    $cacheExpire = 3600; // Cache for 1 hour
+    $totalCustomers = wp_cache_get( $cacheKey, $cacheGroup );
+
+    // SET
+    if ( false === $totalCustomers ) {
+        $totalCustomers = count(get_users(['role' => 'customer']));
+        wp_cache_set( $cacheKey, $totalCustomers, $cacheGroup, $cacheExpire );
+    }    
+
+    // REPLACE
+    if ( false !== $totalCustomers && $replace ) {
+        $totalCustomers = count(get_users(['role' => 'customer']));
+        wp_cache_replace( $cacheKey, $totalCustomers, $cacheGroup, $cacheExpire );
+    }
+
+    return $totalCustomers;
 }
 
 # 2. Total Orders
