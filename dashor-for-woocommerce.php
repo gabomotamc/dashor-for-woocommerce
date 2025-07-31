@@ -15,7 +15,7 @@ define('DFW_PLUGIN_PATH',plugin_dir_path( __FILE__ ));
 define('DFW_PLUGIN_URL',plugin_dir_url(__FILE__));
 define('DFW_PLUGIN_VERSION',"1.0.0");
 define('DFW_PLUGIN_PREFIX',"dfw");
-define('DFW_PLUGIN_CACHE_LIFETIME',3600);
+define('DFW_PLUGIN_CACHE_LIFETIME',1800);
 define('DFW_PLUGIN_CACHE_GROUP',"dfw_cache_queries");
 
 require_once(DFW_PLUGIN_PATH."src/helpers.php");
