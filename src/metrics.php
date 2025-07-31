@@ -4,18 +4,19 @@
 # 1. Total Customers
 function dfw_get_total_customers( $replace = false ) {
     $cacheKey = DFW_PLUGIN_PREFIX.'-total-customers';
-    $totalCustomers = wp_cache_get( $cacheKey, DFW_PLUGIN_CACHE_GROUP );
+    $totalCustomers = get_transient( $cacheKey );
 
     // SET
     if ( false === $totalCustomers ) {
         $totalCustomers = count(get_users(['role' => 'customer']));
-        wp_cache_set( $cacheKey, $totalCustomers, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+        set_transient( $cacheKey, $totalCustomers , DFW_PLUGIN_CACHE_LIFETIME );
     }    
 
     // REPLACE
     if ( false !== $totalCustomers && $replace ) {
         $totalCustomers = count(get_users(['role' => 'customer']));
-        wp_cache_replace( $cacheKey, $totalCustomers, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+        delete_transient( $cacheKey );
+        set_transient( $cacheKey, $totalCustomers , DFW_PLUGIN_CACHE_LIFETIME );
     }
 
     return $totalCustomers;
@@ -24,18 +25,19 @@ function dfw_get_total_customers( $replace = false ) {
 # 2. Total Orders
 function dfw_get_total_orders( $replace = false ) {
     $cacheKey = DFW_PLUGIN_PREFIX.'-total-orders';
-    $totalOrders = wp_cache_get( $cacheKey, DFW_PLUGIN_CACHE_GROUP );
+    $totalOrders = get_transient( $cacheKey );
 
     // SET
     if ( false === $totalOrders ) {
         $totalOrders = count(wc_get_orders(['limit' => -1]));
-        wp_cache_set( $cacheKey, $totalOrders, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+        set_transient( $cacheKey, $totalOrders , DFW_PLUGIN_CACHE_LIFETIME );
     }    
 
     // REPLACE
     if ( false !== $totalOrders && $replace ) {
         $totalOrders = count(wc_get_orders(['limit' => -1]));
-        wp_cache_replace( $cacheKey, $totalOrders, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+        delete_transient( $cacheKey );
+        set_transient( $cacheKey, $totalOrders , DFW_PLUGIN_CACHE_LIFETIME );
     }
 
     return $totalOrders;
@@ -45,18 +47,19 @@ function dfw_get_total_orders( $replace = false ) {
 function dfw_get_total_products( $replace = false ) {
 
     $cacheKey = DFW_PLUGIN_PREFIX.'-total-products';
-    $totalProducts = wp_cache_get( $cacheKey, DFW_PLUGIN_CACHE_GROUP );
+    $totalProducts = get_transient( $cacheKey );
 
     // SET
     if ( false === $totalProducts ) {
         $totalProducts = count(wc_get_products(['limit' => -1]));
-        wp_cache_set( $cacheKey, $totalProducts, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+        set_transient( $cacheKey, $totalProducts , DFW_PLUGIN_CACHE_LIFETIME );
     }    
 
     // REPLACE
     if ( false !== $totalProducts && $replace ) {
         $totalProducts = count(wc_get_products(['limit' => -1]));
-        wp_cache_replace( $cacheKey, $totalProducts, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+        delete_transient( $cacheKey );        
+        set_transient( $cacheKey, $totalProducts , DFW_PLUGIN_CACHE_LIFETIME );
     }
 
     return $totalProducts;
@@ -68,38 +71,46 @@ function dfw_get_total_products( $replace = false ) {
 # 📅 4. Revenue by Status (Last 7 Days) 
 # & 
 # 📅 5. Revenue by Status (Last 30 Days)
-function dfw_get_revenue_by_statuses($days, $replace = false ) {
+function dfw_get_revenues($days, $replace = false ) {
 
-    $cacheKey = DFW_PLUGIN_PREFIX.'-get_revenue_by_statuses'.str_replace(' ','-',$days);
-    $getReneveus = wp_cache_get( $cacheKey, DFW_PLUGIN_CACHE_GROUP );
+    $cacheKey = DFW_PLUGIN_PREFIX.'-get-revenues'.str_replace(' ','-',$days);
+    $getReneveus = get_transient( $cacheKey );
+    $revenues = [];
+    $numberDays = (int)preg_replace('/\D/', '', $days);
 
     if ( $getReneveus !== false && $replace === false ) {
         return $getReneveus;
     }
 
-    $statuses = wc_get_order_statuses();
-    $revenues = [];
-    $start_date = (new DateTime($days))->format('Y-m-d');
+    // Get orders from last 7 days
+    $orders = wc_get_orders([
+        'limit' => -1,
+        'status' => ['completed', 'processing'],
+        'date_created' => '>' . (new DateTime($days))->format('Y-m-d H:i:s'),
+    ]);
 
-    foreach ($statuses as $status => $label) {
-        $orders = wc_get_orders([
-            'status' => $status,
-            'limit' => -1,
-            'date_created' => $start_date
-        ]);
+    // Prepare daily revenue
+    for ($i = $numberDays; $i >= 0; $i--) {
+        $date = (new DateTime("-$i days"))->format('Y-m-d');
+        $revenues[$date] = 0;
+    }
 
-        $total = array_sum(array_map(fn($o) => $o->get_total(), $orders));
-        $revenues[$label] = $total;
+    foreach ($orders as $order) {
+        $date = $order->get_date_created()->date('Y-m-d');
+        if (isset($revenues[$date])) {
+            $revenues[$date] += floatval($order->get_total());
+        }
     }
 
     // SET
     if ( false === $getReneveus ) {
-        wp_cache_set( $cacheKey, $revenues, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+        set_transient( $cacheKey, $revenues , DFW_PLUGIN_CACHE_LIFETIME );
     }    
 
     // REPLACE
     if ( false !== $getReneveus && $replace ) {
-        wp_cache_replace( $cacheKey, $revenues, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+        delete_transient( $cacheKey );        
+        set_transient( $cacheKey, $revenues , DFW_PLUGIN_CACHE_LIFETIME );
     }    
 
     return $revenues;
@@ -111,10 +122,10 @@ function dfw_get_total_orders_by_statuses( $replace = false ) {
 
     $counts = [];
     $cacheKey = DFW_PLUGIN_PREFIX.'-total-orders-by-statuses';
-    $counts = wp_cache_get( $cacheKey, DFW_PLUGIN_CACHE_GROUP );
+    $data = get_transient( $cacheKey );
 
-    if ( $counts !== false && $replace === false ) {
-        return $counts;
+    if ( $data !== false && $replace === false ) {
+        return $data;
     }
 
     $statuses = wc_get_order_statuses();
@@ -124,13 +135,14 @@ function dfw_get_total_orders_by_statuses( $replace = false ) {
     }
 
     // SET
-    if ( false === $counts ) {
-        wp_cache_set( $cacheKey, $counts, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+    if ( false === $data ) {
+        set_transient( $cacheKey, $counts , DFW_PLUGIN_CACHE_LIFETIME );
     }    
 
     // REPLACE
-    if ( false !== $counts && $replace ) {
-        wp_cache_replace( $cacheKey, $counts, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+    if ( false !== $data && $replace ) {
+        delete_transient( $cacheKey );        
+        set_transient( $cacheKey, $counts , DFW_PLUGIN_CACHE_LIFETIME );
     }
 
     return $counts;
@@ -141,10 +153,10 @@ function dfw_get_total_revenues_by_statuses( $replace = false ) {
 
     $revenues = [];
     $cacheKey = DFW_PLUGIN_PREFIX.'-total-reveneus-by-statuses';
-    $revenues = wp_cache_get( $cacheKey, DFW_PLUGIN_CACHE_GROUP );
+    $data = get_transient( $cacheKey );
 
-    if ( $revenues !== false && $replace === false ) {
-        return $revenues;
+    if ( $data !== false && $replace === false ) {
+        return $data;
     }
 
     $statuses = wc_get_order_statuses();
@@ -155,13 +167,14 @@ function dfw_get_total_revenues_by_statuses( $replace = false ) {
     }
     
     // SET
-    if ( false === $revenues ) {
-        wp_cache_set( $cacheKey, $revenues, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+    if ( false === $data ) {
+        set_transient( $cacheKey, $revenues , DFW_PLUGIN_CACHE_LIFETIME );
     }    
 
     // REPLACE
-    if ( false !== $revenues && $replace ) {
-        wp_cache_replace( $cacheKey, $revenues, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+    if ( false !== $data && $replace ) {
+        delete_transient( $cacheKey );        
+        set_transient( $cacheKey, $revenues , DFW_PLUGIN_CACHE_LIFETIME );
     }
 
     return $revenues;
@@ -173,31 +186,58 @@ function dfw_get_top_most_ordered_products($limit = 10, $replace = false) {
     global $wpdb;
     $products = [];
     $cacheKey = DFW_PLUGIN_PREFIX.'-top-most-ordered-products';
-    $products = wp_cache_get( $cacheKey, DFW_PLUGIN_CACHE_GROUP );
+    $data = get_transient( $cacheKey );
 
-    if ( $products !== false && $replace === false ) {
-        return $products;
-    }    
+    if ( $data !== false && $replace === false ) {
+        return $data;
+    }
 
-    $products = $wpdb->get_results("
-        SELECT order_item_name AS name, SUM(order_item_quantity) AS qty
-        FROM {$wpdb->prefix}woocommerce_order_items oi
-        JOIN {$wpdb->prefix}woocommerce_order_itemmeta om 
-            ON oi.order_item_id = om.order_item_id
-        WHERE om.meta_key = '_product_id'
-        GROUP BY order_item_name
-        ORDER BY qty DESC
-        LIMIT {$limit}
-    ");
+    $orders = wc_get_orders([
+        'limit' => -1,
+        'status' => ['completed', 'processing'],
+        'date_created' => '>' . (new DateTime('-30 days'))->format('Y-m-d H:i:s'),
+    ]);
+
+    $product_counts = [];
+
+    foreach ($orders as $order) {
+        foreach ($order->get_items() as $item) {
+            $product_id = $item->get_product_id();
+            $quantity = $item->get_quantity();
+
+            if (!isset($product_counts[$product_id])) {
+                $product_counts[$product_id] = 0;
+            }
+
+            $product_counts[$product_id] += $quantity;
+        }
+    }
+
+    // Sort by quantity descending
+    arsort($product_counts);
+
+    // Get top products
+    $top_products = array_slice($product_counts, 0, $limit, true);
+
+    // Format result
+    foreach ($top_products as $product_id => $count) {
+        $product = wc_get_product($product_id);
+        $products[] = [
+            'name' => $product->get_name(),
+            'id' => $product_id,
+            'orders' => $count
+        ];
+    }
 
     // SET
-    if ( false === $products ) {
-        wp_cache_set( $cacheKey, $products, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+    if ( false === $data ) {
+        set_transient( $cacheKey, $products , DFW_PLUGIN_CACHE_LIFETIME );
     }    
 
     // REPLACE
-    if ( false !== $products && $replace ) {
-        wp_cache_replace( $cacheKey, $products, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+    if ( false !== $data && $replace ) {
+        delete_transient( $cacheKey );        
+        set_transient( $cacheKey, $products , DFW_PLUGIN_CACHE_LIFETIME );
     }
 
     return $products;  
@@ -208,16 +248,16 @@ function dfw_get_top_least_ordered_products($limit = 10, $replace = false ) {
     global $wpdb;
     $products = [];
     $cacheKey = DFW_PLUGIN_PREFIX.'-top-least-ordered-products';
-    $products = wp_cache_get( $cacheKey, DFW_PLUGIN_CACHE_GROUP );
+    $data = get_transient( $cacheKey );
 
-    if ( $products !== false && $replace === false ) {
-        return $products;
-    } 
+    if ( $data !== false && $replace === false ) {
+        return $data;
+    }
 
     $products = $wpdb->get_results("
         SELECT om.meta_value AS product_id, 
                p.post_title AS name, 
-               SUM(om_qty.meta_value) AS qty
+               SUM(om_qty.meta_value) AS orders
         FROM {$wpdb->prefix}woocommerce_order_itemmeta om
         JOIN {$wpdb->prefix}woocommerce_order_items oi 
             ON om.order_item_id = oi.order_item_id
@@ -228,18 +268,19 @@ function dfw_get_top_least_ordered_products($limit = 10, $replace = false ) {
         WHERE om.meta_key = '_product_id'
           AND om_qty.meta_key = '_qty'
         GROUP BY om.meta_value
-        ORDER BY qty ASC
+        ORDER BY orders ASC
         LIMIT {$limit}
     ");
 
     // SET
-    if ( false === $products ) {
-        wp_cache_set( $cacheKey, $products, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+    if ( false === $data ) {
+        set_transient( $cacheKey, $products , DFW_PLUGIN_CACHE_LIFETIME );
     }    
 
     // REPLACE
-    if ( false !== $products && $replace ) {
-        wp_cache_replace( $cacheKey, $products, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+    if ( false !== $data && $replace ) {
+        delete_transient( $cacheKey );        
+        set_transient( $cacheKey, $products , DFW_PLUGIN_CACHE_LIFETIME );
     }
 
     return $products;
@@ -249,10 +290,10 @@ function dfw_get_low_stock_tracked_products($threshold = 5, $limit = 20, $replac
 
     $low_stock = [];
     $cacheKey = DFW_PLUGIN_PREFIX.'-low-stock-tracked-products';
-    $low_stock = wp_cache_get( $cacheKey, DFW_PLUGIN_CACHE_GROUP );
+    $data = get_transient( $cacheKey );
 
-    if ( $low_stock !== false && $replace === false ) {
-        return $low_stock;
+    if ( $data !== false && $replace === false ) {
+        return $data;
     }
 
     $products = wc_get_products([
@@ -275,13 +316,14 @@ function dfw_get_low_stock_tracked_products($threshold = 5, $limit = 20, $replac
     }
 
     // SET
-    if ( false === $low_stock ) {
-        wp_cache_set( $cacheKey, $low_stock, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+    if ( false === $data ) {
+        set_transient( $cacheKey, $low_stock , DFW_PLUGIN_CACHE_LIFETIME );
     }    
 
     // REPLACE
-    if ( false !== $low_stock && $replace ) {
-        wp_cache_replace( $cacheKey, $low_stock, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+    if ( false !== $data && $replace ) {
+        delete_transient( $cacheKey );        
+        set_transient( $cacheKey, $low_stock , DFW_PLUGIN_CACHE_LIFETIME );
     }
 
     return $low_stock;
@@ -292,7 +334,7 @@ function dfw_get_total_products_by_category( $replace = false ) {
 
     $data = [];
     $cacheKey = DFW_PLUGIN_PREFIX.'-low-stock-tracked-products';
-    $data = wp_cache_get( $cacheKey, DFW_PLUGIN_CACHE_GROUP );
+    $data = get_transient( $cacheKey );
 
     if ( $data !== false && $replace === false ) {
         return $data;
@@ -307,19 +349,29 @@ function dfw_get_total_products_by_category( $replace = false ) {
 
     // SET
     if ( false === $data ) {
-        wp_cache_set( $cacheKey, $data, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+        set_transient( $cacheKey, $data , DFW_PLUGIN_CACHE_LIFETIME );
     }    
 
     // REPLACE
     if ( false !== $data && $replace ) {
-        wp_cache_replace( $cacheKey, $data, DFW_PLUGIN_CACHE_GROUP , DFW_PLUGIN_CACHE_LIFETIME );
+        delete_transient( $cacheKey );        
+        set_transient( $cacheKey, $data , DFW_PLUGIN_CACHE_LIFETIME );
     }
 
     return $data;
 }
 
 # 🌟 7. Customers with Most Orders
-function get_top_customers($limit = 10) {
+function dfw_get_top_customers_orders($limit = 10) {
+
+    $list = [];
+    $cacheKey = DFW_PLUGIN_PREFIX.'-top-customers-orders';
+    $data = get_transient( $cacheKey );
+
+    if ( $data !== false && $replace === false ) {
+        return $data;
+    }
+
     $orders = wc_get_orders(['limit' => -1]);
     $customer_counts = [];
 
@@ -333,8 +385,22 @@ function get_top_customers($limit = 10) {
     arsort($customer_counts);
     $top = array_slice($customer_counts, 0, $limit, true);
 
-    return array_map(function($id, $count) {
+    $list = array_map(function($id, $count) {
         $user = get_userdata($id);
-        return ['name' => $user->display_name, 'orders' => $count];
+        return ['name' => "{$user->display_name} ({$user->user_email})", 'orders' => $count];
     }, array_keys($top), $top);
+
+
+    // SET
+    if ( false === $data ) {
+        set_transient( $cacheKey, $list , DFW_PLUGIN_CACHE_LIFETIME );
+    }    
+
+    // REPLACE
+    if ( false !== $data && $replace ) {
+        delete_transient( $cacheKey );        
+        set_transient( $cacheKey, $list , DFW_PLUGIN_CACHE_LIFETIME );
+    }
+
+    return $list;    
 }
