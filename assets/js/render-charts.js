@@ -2,30 +2,35 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch(DfwCharts.ajax_url + '?action=get_dfw_charts')
         .then(res => res.json())
         .then(data => {
+            
+            const barColors = [
+            '#4E79A7', '#F28E2B', '#59A14F', '#E15759',
+            '#B07AA1', '#76B7B2', '#EDC948', '#9C9C9C', '#3F51B8'
+            ];
 
             document.getElementById('totalCustomersLabel').innerHTML = data.dfw_get_total_customers;
             document.getElementById('totalOrdersLabel').innerHTML = data.dfw_get_total_orders;
             document.getElementById('totalProductsLabel').innerHTML = data.dfw_get_total_products;
             
             new Chart(document.getElementById('weeklyRevenueChart'), {
-                type: 'bar',
+                type: 'line',
                 data: {
                     labels: Object.keys(data.dfw_weekly_revenue),
                     datasets: [{
                         label: 'Ganhos nos últimos 7 días',
                         data: Object.values(data.dfw_weekly_revenue),
-                        backgroundColor: '#3F51B8'
+                        backgroundColor: barColors
                     }]
                 }
             });
             new Chart(document.getElementById('monthlyRevenueChart'), {
-                type: 'bar',
+                type: 'line',
                 data: {
                     labels: Object.keys(data.dfw_monthly_revenue),
                     datasets: [{
                         label: 'Ganhos nos últimos 30 días',
                         data: Object.values(data.dfw_monthly_revenue),
-                        backgroundColor: '#3F51B8'
+                        backgroundColor: barColors
                     }]
                 }
             });
@@ -37,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     datasets: [{
                         label: 'Total de pedidos (por status)',
                         data: Object.values(data.dfw_get_total_orders_by_statuses),
-                        backgroundColor: '#3F51B5'
+                        backgroundColor: barColors
                     }]
                 }
             });
@@ -48,33 +53,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     datasets: [{
                         label: 'Total ganhos pedidos (por status)',
                         data: Object.values(data.dfw_get_total_revenues_by_statuses),
-                        backgroundColor: '#3F51B6'
+                        backgroundColor: barColors
                     }]
                 }
             }); 
-            
-            new Chart(document.getElementById('topMostOrderedProductsChart'), {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(data.dfw_get_top_most_ordered_products),
-                    datasets: [{
-                        label: 'Top produtos mais vendidos',
-                        data: Object.values(data.dfw_get_top_most_ordered_products),
-                        backgroundColor: '#3F51B8'
-                    }]
-                }
-            });
-            new Chart(document.getElementById('topLeastOrderedProductsChart'), {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(data.dfw_get_top_least_ordered_products),
-                    datasets: [{
-                        label: 'Top produtos menos vendidos',
-                        data: Object.values(data.dfw_get_top_least_ordered_products),
-                        backgroundColor: '#3F51B8'
-                    }]
-                }
-            });
 
             new Chart(document.getElementById('productsLowStockChart'), {
                 type: 'bar',
@@ -83,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     datasets: [{
                         label: 'Produtos com baixo stock',
                         data: Object.values(data.dfw_get_low_stock_tracked_products),
-                        backgroundColor: '#3F51B8'
+                        backgroundColor: barColors
                     }]
                 }
             });            
@@ -94,30 +76,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     datasets: [{
                         label: 'Total produtos por categoria',
                         data: Object.values(data.dfw_get_total_products_by_category),
-                        backgroundColor: '#3F51B8'
+                        backgroundColor: barColors
                     }]
                 }
-            });            
+            });       
             
-            /*new Chart(document.getElementById('topCustomersChart'), {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(data.top_customers),
-                    datasets: [{
-                        label: 'Top clientes com mais vendas',
-                        data: Object.values(data.top_customers),
-                        backgroundColor: '#3F51B8'
-                    }]
-                }
+            let topMostOrderedProductsList = document.getElementById('topMostOrderedProductsList');
+            data.dfw_get_top_most_ordered_products.forEach(item => {
+                let mostLi = document.createElement('li');
+                mostLi.textContent = item.name +" ("+ item.orders +")";
+                topMostOrderedProductsList.appendChild(mostLi);
             });
-            
-            new Chart(document.getElementById('customersChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: data.customers.map(c => c.name),
-                    datasets: [{data: data.customers.map(() => 1), backgroundColor: '#9C27B0' }]
-                }
-            });*/
+
+            let topLeastOrderedProductsList = document.getElementById('topLeastOrderedProductsList');
+            data.dfw_get_top_least_ordered_products.forEach(item => {
+                let leastLi = document.createElement('li');
+                leastLi.textContent = item.name +" ("+ item.orders +")";
+                topLeastOrderedProductsList.appendChild(leastLi);
+            });            
+
+            let topCustomersOrdersList = document.getElementById('topCustomersOrdersList');
+            data.dfw_get_top_customers_orders.forEach(item => {
+                let li = document.createElement('li');
+                li.textContent = item.name +" ("+ item.orders +" pedidos)";
+                topCustomersOrdersList.appendChild(li);
+            });
 
         });
 });
