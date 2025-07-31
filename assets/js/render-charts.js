@@ -1,19 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
-    fetch(WooData.ajax_url + '?action=get_woo_data')
+    fetch(DfwCharts.ajax_url + '?action=get_dfw_charts')
         .then(res => res.json())
         .then(data => {
 
-            document.getElementById('totalCustomersLabel').innerHTML = data.get_total_customers;
-            document.getElementById('totalOrdersLabel').innerHTML = data.get_total_orders;
-            document.getElementById('totalProductsLabel').innerHTML = data.get_total_products;
+            document.getElementById('totalCustomersLabel').innerHTML = data.dfw_get_total_customers;
+            document.getElementById('totalOrdersLabel').innerHTML = data.dfw_get_total_orders;
+            document.getElementById('totalProductsLabel').innerHTML = data.dfw_get_total_products;
             
             new Chart(document.getElementById('weeklyRevenueChart'), {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(data.weekly_revenue),
+                    labels: Object.keys(data.dfw_weekly_revenue),
                     datasets: [{
                         label: 'Ganhos nos últimos 7 días',
-                        data: Object.values(data.weekly_revenue),
+                        data: Object.values(data.dfw_weekly_revenue),
                         backgroundColor: '#3F51B8'
                     }]
                 }
@@ -21,10 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
             new Chart(document.getElementById('monthlyRevenueChart'), {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(data.monthly_revenue),
+                    labels: Object.keys(data.dfw_monthly_revenue),
                     datasets: [{
                         label: 'Ganhos nos últimos 30 días',
-                        data: Object.values(data.monthly_revenue),
+                        data: Object.values(data.dfw_monthly_revenue),
                         backgroundColor: '#3F51B8'
                     }]
                 }
@@ -33,10 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
             new Chart(document.getElementById('totalOrdersByStatusChart'), {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(data.total_orders_by_status),
+                    labels: Object.keys(data.dfw_get_total_orders_by_statuses),
                     datasets: [{
                         label: 'Total de pedidos (por status)',
-                        data: Object.values(data.total_orders_by_status),
+                        data: Object.values(data.dfw_get_total_orders_by_statuses),
                         backgroundColor: '#3F51B5'
                     }]
                 }
@@ -44,10 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
             new Chart(document.getElementById('totalRevenueByStatusChart'), {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(data.total_revenue_by_status),
+                    labels: Object.keys(data.dfw_get_total_revenues_by_statuses),
                     datasets: [{
                         label: 'Total ganhos pedidos (por status)',
-                        data: Object.values(data.total_revenue_by_status),
+                        data: Object.values(data.dfw_get_total_revenues_by_statuses),
                         backgroundColor: '#3F51B6'
                     }]
                 }
@@ -56,10 +56,10 @@ document.addEventListener('DOMContentLoaded', () => {
             new Chart(document.getElementById('topMostOrderedProductsChart'), {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(data.top_most_ordered_products),
+                    labels: Object.keys(data.dfw_get_top_most_ordered_products),
                     datasets: [{
                         label: 'Top produtos mais vendidos',
-                        data: Object.values(data.top_most_ordered_products),
+                        data: Object.values(data.dfw_get_top_most_ordered_products),
                         backgroundColor: '#3F51B8'
                     }]
                 }
@@ -67,10 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
             new Chart(document.getElementById('topLeastOrderedProductsChart'), {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(data.top_least_ordered_products),
+                    labels: Object.keys(data.dfw_get_top_least_ordered_products),
                     datasets: [{
                         label: 'Top produtos menos vendidos',
-                        data: Object.values(data.top_least_ordered_products),
+                        data: Object.values(data.dfw_get_top_least_ordered_products),
                         backgroundColor: '#3F51B8'
                     }]
                 }
@@ -79,10 +79,10 @@ document.addEventListener('DOMContentLoaded', () => {
             new Chart(document.getElementById('productsLowStockChart'), {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(data.products_low_stock),
+                    labels: Object.keys(data.dfw_get_low_stock_tracked_products),
                     datasets: [{
                         label: 'Produtos com baixo stock',
-                        data: Object.values(data.products_low_stock),
+                        data: Object.values(data.dfw_get_low_stock_tracked_products),
                         backgroundColor: '#3F51B8'
                     }]
                 }
@@ -90,16 +90,16 @@ document.addEventListener('DOMContentLoaded', () => {
             new Chart(document.getElementById('productsByCategoryChart'), {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(data.products_by_category),
+                    labels: Object.keys(data.dfw_get_total_products_by_category),
                     datasets: [{
                         label: 'Total produtos por categoria',
-                        data: Object.values(data.products_by_category),
+                        data: Object.values(data.dfw_get_total_products_by_category),
                         backgroundColor: '#3F51B8'
                     }]
                 }
             });            
             
-            new Chart(document.getElementById('topCustomersChart'), {
+            /*new Chart(document.getElementById('topCustomersChart'), {
                 type: 'bar',
                 data: {
                     labels: Object.keys(data.top_customers),
@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     labels: data.customers.map(c => c.name),
                     datasets: [{data: data.customers.map(() => 1), backgroundColor: '#9C27B0' }]
                 }
-            });
+            });*/
 
         });
 });
