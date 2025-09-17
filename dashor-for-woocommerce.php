@@ -5,7 +5,7 @@ Plugin URI: https://gaboworks.com/portfolio/dashor
 Description: Generates charts for WooCommerce orders, products, and customers.
 Version: 1.0.0
 Author: Gabriel Mota Chong
-Author URI: https://gaboworks.com/portfolio/dashor
+Author URI: https://gaboworks.com
 License: GPL2
 */
 
