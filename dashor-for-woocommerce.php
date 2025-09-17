@@ -18,8 +18,10 @@ define('DFW_PLUGIN_PREFIX',"dfw");
 define('DFW_PLUGIN_CACHE_LIFETIME',1800);
 define('DFW_PLUGIN_CACHE_GROUP',"dfw_cache_queries");
 
-require_once(DFW_PLUGIN_PATH."src/helpers.php");
-require_once(DFW_PLUGIN_PATH."src/metrics.php");
-require_once(DFW_PLUGIN_PATH."src/admin-menu.php");
+require_once(DFW_PLUGIN_PATH."includes/helpers.php");
+require_once(DFW_PLUGIN_PATH."includes/admin-menu.php");
+require_once(DFW_PLUGIN_PATH."includes/admin-scripts.php");
+
 require_once(DFW_PLUGIN_PATH."src/admin-pages.php");
-require_once(DFW_PLUGIN_PATH."src/scripts.php");
+require_once(DFW_PLUGIN_PATH."src/metrics.php");
+require_once(DFW_PLUGIN_PATH."src/metrics-events.php");
